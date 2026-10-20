@@ -1,0 +1,15 @@
+{
+  "name": "detent-demo",
+  "version": "0.1.0",
+  "description": "A tiny slugify library used as the target of a Detent worked example.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": "./src/index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
