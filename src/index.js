@@ -4,6 +4,7 @@
  * @param {{ separator?: string, maxLength?: number | null }} [options]
  *   `maxLength` caps the result, cutting at a separator so no word is split.
  *   It must be an integer of at least 1; `null` or omitted means no cap.
+ *   With `maxLength`, the separator must contain no letters or digits.
  * @returns {string}
  */
 export function slugify(input, options = {}) {
@@ -15,6 +16,10 @@ export function slugify(input, options = {}) {
     throw new RangeError("maxLength must be an integer of at least 1");
   }
   const separator = options.separator ?? "-";
+  // Slug words are [a-z0-9], so a separator made of those cannot mark a word boundary.
+  if (maxLength !== undefined && !/^[^a-z0-9]+$/.test(separator)) {
+    throw new RangeError("maxLength needs a separator with no letters or digits");
+  }
   const slug = input
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
