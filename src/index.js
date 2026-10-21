@@ -13,12 +13,18 @@ export function slugify(input, options = {}) {
     throw new RangeError("maxLength must be an integer of at least 1");
   }
   const separator = options.separator ?? "-";
-  return input
+  const slug = input
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, separator)
     .replace(new RegExp(`^${escape(separator)}+|${escape(separator)}+$`, "g"), "");
+  if (maxLength === undefined || slug.length <= maxLength) return slug;
+  const window = slug.slice(0, maxLength);
+  if (slug.startsWith(separator, maxLength)) return window;
+  const cut = window.lastIndexOf(separator);
+  if (cut > 0) return window.slice(0, cut);
+  return slug.split(separator)[0].slice(0, maxLength);
 }
 
 function escape(s) {
