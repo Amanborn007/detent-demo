@@ -2,7 +2,8 @@
  * Turn arbitrary text into a URL-safe slug.
  * @param {string} input
  * @param {{ separator?: string, maxLength?: number | null }} [options]
- *   `maxLength` caps the result, cutting at a separator so no word is split.
+ *   `maxLength` caps the result at the last separator that fits. A first word
+ *   longer than `maxLength` is the one case that gets cut mid-word.
  *   It must be an integer of at least 1; `null` or omitted means no cap.
  *   With `maxLength`, the separator must contain no letters or digits.
  * @returns {string}
