@@ -8,7 +8,7 @@ export function slugify(input, options = {}) {
   if (typeof input !== "string") {
     throw new TypeError("slugify expects a string");
   }
-  const { maxLength } = options;
+  const maxLength = options.maxLength ?? undefined;
   if (maxLength !== undefined && !(Number.isInteger(maxLength) && maxLength >= 1)) {
     throw new RangeError("maxLength must be an integer of at least 1");
   }
