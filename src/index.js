@@ -8,6 +8,10 @@ export function slugify(input, options = {}) {
   if (typeof input !== "string") {
     throw new TypeError("slugify expects a string");
   }
+  const { maxLength } = options;
+  if (maxLength !== undefined && !(Number.isInteger(maxLength) && maxLength >= 1)) {
+    throw new RangeError("maxLength must be an integer of at least 1");
+  }
   const separator = options.separator ?? "-";
   return input
     .normalize("NFKD")
