@@ -5,6 +5,7 @@ A tiny slugify library. It exists as the target repo for the [Detent](https://gi
 ```js
 import { slugify } from "detent-demo";
 slugify("Crème Brûlée"); // "creme-brulee"
+slugify("Hello brave new world", { maxLength: 13 }); // "hello-brave"
 ```
 
 Run the tests with `npm test`.

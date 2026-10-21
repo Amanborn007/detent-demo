@@ -1,7 +1,9 @@
 /**
  * Turn arbitrary text into a URL-safe slug.
  * @param {string} input
- * @param {{ separator?: string }} [options]
+ * @param {{ separator?: string, maxLength?: number | null }} [options]
+ *   `maxLength` caps the result, cutting at a separator so no word is split.
+ *   It must be an integer of at least 1; `null` or omitted means no cap.
  * @returns {string}
  */
 export function slugify(input, options = {}) {
