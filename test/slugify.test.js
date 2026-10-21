@@ -27,3 +27,12 @@ test("rejects a maxLength below 1 or not an integer", () => {
     assert.throws(() => slugify("Hello World", { maxLength }), RangeError, String(maxLength));
   }
 });
+
+test("caps the length by cutting at the last separator that fits", () => {
+  assert.equal(slugify("Hello brave new world", { maxLength: 13 }), "hello-brave");
+  assert.equal(slugify("Hello brave new world", { maxLength: 11 }), "hello-brave");
+});
+
+test("never leaves a trailing separator after the cut", () => {
+  assert.equal(slugify("Hello brave new world", { maxLength: 12 }), "hello-brave");
+});
