@@ -21,3 +21,9 @@ test("honours a custom separator", () => {
 test("rejects non-strings", () => {
   assert.throws(() => slugify(42), TypeError);
 });
+
+test("rejects a maxLength below 1 or not an integer", () => {
+  for (const maxLength of [0, -1, 2.5, "10", Number.NaN]) {
+    assert.throws(() => slugify("Hello World", { maxLength }), RangeError, String(maxLength));
+  }
+});
