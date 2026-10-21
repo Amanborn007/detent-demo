@@ -54,3 +54,10 @@ test("leaves output unchanged when maxLength is not given or not needed", () => 
 test("treats maxLength: null as no cap", () => {
   assert.equal(slugify("Hello brave new world", { maxLength: null }), "hello-brave-new-world");
 });
+
+test("rejects a separator that can appear inside a word when maxLength is set", () => {
+  for (const separator of ["", "a", "x1"]) {
+    assert.throws(() => slugify("Hello brave", { separator, maxLength: 7 }), RangeError, JSON.stringify(separator));
+  }
+  assert.equal(slugify("Hello brave", { separator: "" }), "hellobrave");
+});
