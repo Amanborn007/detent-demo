@@ -50,3 +50,7 @@ test("leaves output unchanged when maxLength is not given or not needed", () => 
   assert.equal(slugify("Hello brave new world"), "hello-brave-new-world");
   assert.equal(slugify("Hello World", { maxLength: 50 }), "hello-world");
 });
+
+test("treats maxLength: null as no cap", () => {
+  assert.equal(slugify("Hello brave new world", { maxLength: null }), "hello-brave-new-world");
+});
