@@ -36,3 +36,17 @@ test("caps the length by cutting at the last separator that fits", () => {
 test("never leaves a trailing separator after the cut", () => {
   assert.equal(slugify("Hello brave new world", { maxLength: 12 }), "hello-brave");
 });
+
+test("cuts a first word that is longer than maxLength", () => {
+  assert.equal(slugify("Supercalifragilistic expialidocious", { maxLength: 5 }), "super");
+});
+
+test("never splits a multi-character separator", () => {
+  assert.equal(slugify("ab cd ef", { separator: "--", maxLength: 7 }), "ab--cd");
+  assert.equal(slugify("ab cd", { separator: "--", maxLength: 3 }), "ab");
+});
+
+test("leaves output unchanged when maxLength is not given or not needed", () => {
+  assert.equal(slugify("Hello brave new world"), "hello-brave-new-world");
+  assert.equal(slugify("Hello World", { maxLength: 50 }), "hello-world");
+});
