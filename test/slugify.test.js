@@ -60,3 +60,26 @@ test("rejects a separator that can appear inside a word when maxLength is set", 
     assert.throws(() => slugify("Hello brave", { separator, maxLength: 7 }), RangeError, JSON.stringify(separator));
   }
 });
+
+test("rejects Infinity as maxLength", () => {
+  assert.throws(() => slugify("Hello World", { maxLength: Infinity }), RangeError);
+});
+
+test("keeps the result within maxLength, without a trailing separator, as a prefix of the uncapped slug", () => {
+  const titles = ["Hello brave new world", "ab cd ef gh", "Supercalifragilistic expialidocious", "a b c d e f g", "One"];
+  for (const separator of ["-", "--", "_"]) {
+    for (const title of titles) {
+      const uncapped = slugify(title, { separator });
+      for (let maxLength = 1; maxLength <= 25; maxLength++) {
+        const label = `${JSON.stringify(title)} separator ${JSON.stringify(separator)} maxLength ${maxLength}`;
+        const result = slugify(title, { separator, maxLength });
+        assert.ok(result.length <= maxLength, `too long: ${label}`);
+        assert.ok(!result.endsWith(separator), `trailing separator: ${label}`);
+        assert.ok(uncapped.startsWith(result), `not a prefix: ${label}`);
+        const wholeWords = result === uncapped || uncapped.startsWith(separator, result.length);
+        const firstWordCut = uncapped.split(separator)[0].length > maxLength;
+        assert.ok(wholeWords || firstWordCut, `splits a word: ${label}`);
+      }
+    }
+  }
+});
