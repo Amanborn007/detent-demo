@@ -30,3 +30,16 @@ test("known limit: the separator is not validated without maxLength", () => {
 test("known limit: null options throws TypeError", () => {
   assert.throws(() => slugify("x", null), TypeError);
 });
+
+test("known limit: trimming a multi-character separator eats word characters", () => {
+  assert.equal(slugify(" yes", { separator: "xy" }), "es");
+});
+
+test("known limit: $ patterns in the separator are read by String.replace", () => {
+  assert.equal(slugify("Hello brave new world", { separator: "$$" }), "hello$brave$new$world");
+  assert.equal(slugify("Hello brave new world", { separator: "$&", maxLength: 13 }), "hello brave n");
+});
+
+test("known limit: an uppercase separator passes the maxLength check", () => {
+  assert.equal(slugify("Hello World", { separator: "A", maxLength: 7 }), "hello");
+});
