@@ -83,3 +83,20 @@ test("keeps the result within maxLength, without a trailing separator, as a pref
     }
   }
 });
+
+test("treats separator: null as the default dash", () => {
+  assert.equal(slugify("Hello World", { separator: null }), "hello-world");
+});
+
+test("caps accented and mixed-case titles into a URL-safe prefix of the uncapped slug", () => {
+  for (const title of ["Crème Brûlée au chocolat", "HELLO Brave NEW world"]) {
+    const uncapped = slugify(title);
+    for (let maxLength = 1; maxLength <= 25; maxLength++) {
+      const result = slugify(title, { maxLength });
+      const label = `${JSON.stringify(title)} maxLength ${maxLength}`;
+      assert.match(result, /^[a-z0-9]+(-[a-z0-9]+)*$/, `not URL-safe: ${label}`);
+      assert.ok(result.length <= maxLength, `too long: ${label}`);
+      assert.ok(uncapped.startsWith(result), `not a prefix: ${label}`);
+    }
+  }
+});

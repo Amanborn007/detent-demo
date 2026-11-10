@@ -1,10 +1,10 @@
 # detent-demo
 
-A slugify library with no dependencies (`src/index.js`, about 40 lines). [Detent](https://github.com/Amanborn007/detent) runs a coding agent through fixed stages and pauses for human answers. This repo is the target of one recorded run, and it is kept small so the run is easy to read. It is a fixture and I have not published it to npm.
+A slugify library with no dependencies (`src/index.js`, about 40 lines). [Detent](https://github.com/Amanborn007/detent) runs a coding agent through fixed stages and pauses for human answers. This repo is the target of one recorded run, and it is kept small so a reviewer can check the whole diff. It is a fixture, not a competing slugify package.
 
 ## The run
 
-[Issue #1](https://github.com/Amanborn007/detent-demo/issues/1) asked for a `maxLength` option because long titles make long slugs. A slug that goes into a URL path or a fixed-width database column needs a cap, and a plain slice would cut a word in half. [PR #2](https://github.com/Amanborn007/detent-demo/pull/2) is what the run produced. The record is [2026-10-20-amanborn007-detent-demo-1](https://github.com/Amanborn007/detent/tree/main/docs/examples/2026-10-20-amanborn007-detent-demo-1) in the Detent repo.
+[Issue #1](https://github.com/Amanborn007/detent-demo/issues/1) asked for a `maxLength` option because long titles make long slugs. Its criteria say the cut lands on a separator, so a plain `slice` that cuts a word in half is out. [PR #2](https://github.com/Amanborn007/detent-demo/pull/2) is what the run produced. The record is [2026-10-20-amanborn007-detent-demo-1](https://github.com/Amanborn007/detent/tree/main/docs/examples/2026-10-20-amanborn007-detent-demo-1) in the Detent repo.
 
 ```js
 import { slugify } from "./src/index.js";
@@ -21,19 +21,25 @@ You need Node 20 or later. There is no install step.
 git clone https://github.com/Amanborn007/detent-demo.git
 cd detent-demo
 npm test
-node --input-type=module -e 'import { slugify as s } from "./src/index.js"; console.log(s("Hello brave new world", { maxLength: 13 })); s("x", { maxLength: 0 })'
+node --input-type=module -e 'import { slugify as s } from "./src/index.js"; console.log(s("Hello brave new world", { maxLength: 13 })); try { s("x", { maxLength: 0 }) } catch (e) { console.log(e.name) }'
 ```
 
-The last command prints `hello-brave` and then throws `RangeError`.
+The last command prints `hello-brave` and then `RangeError`.
+
+## How it works
+
+`slugify` runs NFKD, strips combining marks, lowercases, turns each run of characters outside `a-z0-9` into the separator and trims the ends. The cut runs last, on that trimmed slug, so a call without `maxLength` takes the same path as before ([plan.md](https://github.com/Amanborn007/detent/blob/main/docs/examples/2026-10-20-amanborn007-detent-demo-1/plan/plan.md)). It cuts at `lastIndexOf(separator, maxLength)`.
 
 ## Decisions
 
-The record has seven questions. Links go to [the record folder](https://github.com/Amanborn007/detent/blob/main/docs/examples/2026-10-20-amanborn007-detent-demo-1). Two changed what `slugify` does.
+Links go to [the record folder](https://github.com/Amanborn007/detent/blob/main/docs/examples/2026-10-20-amanborn007-detent-demo-1). Two of the seven questions changed what `slugify` does.
 
 - D-001, `maxLength: null` ([decisions.json](https://github.com/Amanborn007/detent/blob/main/docs/examples/2026-10-20-amanborn007-detent-demo-1/decisions.json)). I chose "no cap". The alternative was `RangeError`. A `null` from a config file means unset, and `separator` already treats `null` that way. The tradeoff is that a mistaken `null` is not reported.
-- D-007, a separator such as `a` can split a word at the cut ([reviewer-response.json](https://github.com/Amanborn007/detent/blob/main/docs/examples/2026-10-20-amanborn007-detent-demo-1/verify/reviewer-response.json)). I chose to fix it in the PR and not ship it with a note, because it broke the documented promise that no word is split. With `maxLength` set, a separator that is empty or has a lowercase letter or digit throws `RangeError`. Without `maxLength` the separator is not checked, so existing calls return what they did before, as issue #1 requires. The tradeoff is that `separator: "a"` works without `maxLength` and throws with it.
+- D-007, a separator such as `a` can split a word at the cut ([reviewer-response.json](https://github.com/Amanborn007/detent/blob/main/docs/examples/2026-10-20-amanborn007-detent-demo-1/verify/reviewer-response.json)). I fixed it in the PR, because it broke the promise that no word is split. With `maxLength` set, a separator that is empty or has a lowercase letter or digit throws `RangeError`. Without `maxLength` the separator is not checked, so existing calls return what they did before, as issue #1 requires. The tradeoff is that `separator: "a"` works without `maxLength` and throws with it.
+- Cutting the joined slug, not a word list. Splitting into words, truncating the list and joining would not need the separator check. I kept the cut after the existing pipeline so the no-`maxLength` path stays untouched. The cost is the separator limits below.
+- A first word longer than the cap is cut mid-word, as issue #1 says. The alternatives were to throw or to return the word whole, and either breaks "at most `maxLength` characters".
 
-D-002 kept a docs step the brief did not ask for, because an option nobody can find in the docs is not usable. D-003 to D-006 were approval gates for the plan, the review, the evidence and the push, and did not change the code. The approach and risks are in [plan.md](https://github.com/Amanborn007/detent/blob/main/docs/examples/2026-10-20-amanborn007-detent-demo-1/plan/plan.md).
+D-002 kept a docs step the brief did not ask for, because an option nobody can find in the docs is not usable. D-003 and D-006 approved the plan and the push. D-004 and D-005 turned down the agent's own review and hand-gathered evidence and asked for an independent reviewer and verifier. The reviewer then raised D-007.
 
 ## What did not work
 
@@ -44,7 +50,7 @@ D-002 kept a docs step the brief did not ask for, because an option nobody can f
 
 ## Edge cases covered
 
-`test/slugify.test.js` covers accents, punctuation runs and trimmed ends, a custom separator, and non-string input throwing `TypeError`. For `maxLength` it covers a cut on the last separator that fits, a first word longer than the cap, a multi-character separator never split (`ab cd ef` with `--` at 7 gives `ab--cd`), and `RangeError` for anything but an integer of at least 1. A sweep over five titles, three separators and caps 1 to 25 checks that the result fits the cap, has no trailing separator, is a prefix of the uncapped slug and splits no word except a first word longer than the cap.
+`test/slugify.test.js` covers accents, punctuation runs and trimmed ends, a custom separator, `separator: null`, and non-string input throwing `TypeError`. For `maxLength` it covers a cut on the last separator that fits, a first word longer than the cap, a multi-character separator never split (`ab cd ef` with `--` at 7 gives `ab--cd`), `RangeError` for 0, -1, 2.5, `"10"`, `NaN` and `Infinity`, and `null` meaning no cap. A sweep over titles, three separators and caps 1 to 25 checks that the result fits the cap, has no trailing separator, is a prefix of the uncapped slug and splits no word except a first word longer than the cap.
 
 ## Known limits
 
@@ -52,7 +58,7 @@ Each limit is pinned in `test/known-limits.test.js`, so a fix or a regression fa
 
 - Each run of characters outside `a-z0-9` after NFKD becomes one separator, and separators at the ends are trimmed. So `Привет мир`, empty input and punctuation-only input all return `""` with no error.
 - NFKD plus stripping combining marks needs no data table, but letters with no decomposition are lost or split: `Straße` gives `stra-e`, `Søren` gives `s-ren`.
-- An apostrophe splits a word, and `null` options throw `TypeError`.
+- An apostrophe splits a word. `null` options throw `TypeError`, from reading a property of `null` and not from a check.
 - The separator is checked only with `maxLength`, and only for lowercase letters and digits, so `A` passes.
 - Trimming repeats only the last character of the separator, so `slugify(" yes", { separator: "xy" })` gives `es`.
 - The separator is passed to `String.replace`, so `$&` is read as a pattern. `slugify("Hello brave new world", { separator: "$&", maxLength: 13 })` gives `hello brave n`.
@@ -62,8 +68,8 @@ There is no CI, no wide Unicode test and no performance test, so `npm test` is t
 ## What I would change
 
 - Validate the separator whether or not `maxLength` is set, and group it in the trim regex. Both change output for some existing calls, so they belong in a 1.0.
-- Pass the separator to `replace` through a function so `$` is literal. This docs branch does not touch `src/index.js`.
-- Add a transliteration table for `ß`, `ø` and `Ł`. It needs a data file, which gives up part of the no-dependency goal.
+- Pass the separator to `replace` through a function so `$` is literal. That changes output for existing callers who pass `$$`, so it also waits for 1.0.
+- Add a transliteration table for `ß`, `ø` and `Ł`. Someone has to write and maintain the table in this repo, and it changes the output for those letters, which the known-limits tests pin.
 - Add a CI workflow that runs `node --test` on Node 20 and 22.
 
 ## License
