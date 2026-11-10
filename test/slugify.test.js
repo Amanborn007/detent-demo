@@ -100,3 +100,33 @@ test("caps accented and mixed-case titles into a URL-safe prefix of the uncapped
     }
   }
 });
+
+test("matches the 0.1.0 output for calls without maxLength", () => {
+  const cases = [
+    ["Hello World", {}, "hello-world"],
+    ["Crème Brûlée", {}, "creme-brulee"],
+    ["  --Hello,   World!--  ", {}, "hello-world"],
+    ["Hello World", { separator: "_" }, "hello_world"],
+    ["Hello World", { separator: "." }, "hello.world"],
+    ["Hello World", { separator: "+" }, "hello+world"],
+    ["a b c", { separator: "*" }, "a*b*c"],
+    ["Hello brave new world", { separator: "$&" }, "hello brave new world"],
+    ["Hello brave new world", { separator: "a" }, "helloabraveanewaworld"],
+    ["Straße Søren", {}, "stra-e-s-ren"],
+    ["Привет мир", {}, ""],
+    ["Don't stop", {}, "don-t-stop"],
+    ["Ünïcödé ÀÉÎ 123", {}, "unicode-aei-123"],
+    ["", {}, ""],
+    ["!!!", {}, ""],
+  ];
+  for (const [input, options, expected] of cases) {
+    assert.equal(slugify(input, options), expected, JSON.stringify([input, options]));
+  }
+});
+
+test("treats regex characters in the separator as literal text", () => {
+  for (const separator of [".", "+", "*"]) {
+    assert.equal(slugify("a b c", { separator }), `a${separator}b${separator}c`);
+    assert.equal(slugify("Hello brave new world", { separator, maxLength: 13 }), `hello${separator}brave`);
+  }
+});
