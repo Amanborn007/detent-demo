@@ -23,7 +23,7 @@ export function slugify(input, options = {}) {
   }
   const slug = input
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, separator)
     .replace(new RegExp(`^${escape(separator)}+|${escape(separator)}+$`, "g"), "");
